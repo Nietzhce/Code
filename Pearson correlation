@@ -1,0 +1,39 @@
+Pearson correlation coding
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
+import matplotlib
+
+import pandas as pd
+from google.colab import files
+
+# Upload Excel file
+
+uploaded = files.upload()  
+df = pd.read_excel('Variables.xlsx', sheet_name='sheet1')
+
+# Variable to be analyzed
+selected_columns = ['BOD', 'TN', 'TP', 'DO', 'SN',
+                    'VD', 'SW', 'Urban', 'Agricultural', 'Forest',
+                    'SSE', 'EPT', 'GC', 'TS', 'BMI']
+df_selected = df[selected_columns].dropna()
+
+# Calculating correlation coefficient and significance level
+corr_matrix = df_selected.corr(method='pearson')
+pval_matrix = pd.DataFrame(np.ones(corr_matrix.shape), columns=corr_matrix.columns, index=corr_matrix.index)
+for row in corr_matrix.columns:
+    for col in corr_matrix.columns:
+        _, pval = pearsonr(df_selected[row], df_selected[col])
+        pval_matrix.loc[row, col] = pval
+
+plt.figure(figsize=(12, 10))
+sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm',
+            vmin=-1, vmax=1, cbar_kws={"shrink": .8}, linewidths=.5, square=True)
+plt.title("Pearson Correlation Matrix", fontsize=14, fontname='Palatino Linotype')
+plt.xticks(fontsize=11, fontname='Palatino Linotype', rotation=45, ha='right')
+plt.yticks(fontsize=11, fontname='Palatino Linotype', rotation=0)
+plt.tight_layout()
+plt.show()
