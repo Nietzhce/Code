@@ -1,0 +1,62 @@
+PCA coding
+
+# Loading the library
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Import Excel file 
+import pandas as pd
+from google.colab import files
+uploaded = files.upload()
+df = pd.read_excel('Variables.xlsx', sheet_name='sheet1')
+
+# Remove missing values
+df_clean = df.dropna()
+
+# Variable separation
+X = df_clean.drop(columns=['BMI'])
+y = df_clean['BMI']
+
+# standardization
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Performing PCA
+pca = PCA(n_components=2)
+principal_components = pca.fit_transform(X_scaled)
+pc_df = pd.DataFrame(data=principal_components, columns=['PC1', 'PC2'])
+pc_df['BMI'] = y.values
+
+# Calculating variable loading
+loadings = pd.DataFrame(pca.components_.T, columns=['PC1', 'PC2'], index=X.columns)
+
+# Figure visualization
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+# (a) Variable loading biplot
+for i in range(len(loadings)):
+    axes[0].arrow(0, 0, loadings.iloc[i, 0], loadings.iloc[i, 1],
+                  color='gray', alpha=0.8, head_width=0.03)
+    axes[0].text(loadings.iloc[i, 0]*1.1, loadings.iloc[i, 1]*1.1,
+                 loadings.index[i], color='black')
+axes[0].axhline(0, color='black', linewidth=0.5)
+axes[0].axvline(0, color='black', linewidth=0.5)
+axes[0].set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)")
+axes[0].set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)")
+axes[0].set_title('(a) PCA biplot of variable loadings')
+axes[0].grid(True)
+
+# (b) BMI-based point color visualization
+scatter = axes[1].scatter(pc_df['PC1'], pc_df['PC2'], c=pc_df['BMI'], cmap='viridis')
+cbar = plt.colorbar(scatter, ax=axes[1])
+cbar.set_label('BMI Score')
+axes[1].set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)")
+axes[1].set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)")
+axes[1].set_title('(b) PCA of sites colored by BMI score')
+axes[1].grid(True)
+plt.tight_layout()
+plt.show()
